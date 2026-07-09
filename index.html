@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Haseeb Ullah — Software & AI Engineer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #12141c;
+    --bg-raised: #191c26;
+    --panel: #1d212c;
+    --line: #2a2f3d;
+    --text: #e9e6dd;
+    --text-dim: #8b93a7;
+    --amber: #e8a33d;
+    --teal: #5fb3ad;
+    --rose: #d97a86;
+    --violet: #9d8cf0;
+    --green: #7ec98f;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter', sans-serif;
+    overflow-x:hidden;
+  }
+  ::selection{ background:var(--amber); color:#12141c; }
+
+  /* ---------- BOOT SCREEN ---------- */
+  #boot{
+    position:fixed; inset:0; background:var(--bg); z-index:999;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'JetBrains Mono', monospace;
+    transition:opacity .6s ease, visibility .6s ease;
+  }
+  #boot.hidden{ opacity:0; visibility:hidden; pointer-events:none; }
+  #boot-inner{ width:min(560px, 86vw); }
+  #boot-log{ font-size:13px; color:var(--text-dim); line-height:1.9; min-height:150px; }
+  #boot-log .ok{ color:var(--green); }
+  #boot-bar-track{ height:6px; background:var(--panel); border:1px solid var(--line); margin-top:14px; overflow:hidden; }
+  #boot-bar{ height:100%; width:0%; background:linear-gradient(90deg,var(--teal),var(--amber)); transition:width .25s linear; }
+  #boot-pct{ font-size:11px; color:var(--text-dim); margin-top:8px; letter-spacing:.05em; }
+
+  /* ---------- LAYOUT: IDE SHELL ---------- */
+  .ide{ display:flex; min-height:100vh; }
+  .sidebar{
+    width:250px; flex-shrink:0; background:var(--bg-raised);
+    border-right:1px solid var(--line);
+    padding:22px 0; position:sticky; top:0; height:100vh; overflow-y:auto;
+  }
+  .brand{ padding:0 20px 20px; border-bottom:1px solid var(--line); margin-bottom:14px; }
+  .brand .dot-row{ display:flex; gap:6px; margin-bottom:14px; }
+  .brand .dot{ width:11px; height:11px; border-radius:50%; }
+  .dot.red{ background:#e2685f;} .dot.yellow{background:#e7bc5b;} .dot.grn{background:#63c168;}
+  .brand h1{ font-family:'JetBrains Mono', monospace; font-size:15px; font-weight:700; }
+  .brand p{ font-size:11.5px; color:var(--text-dim); margin-top:4px; font-family:'JetBrains Mono', monospace; }
+
+  .tree{ padding:0 10px; }
+  .tree-label{ font-size:10.5px; text-transform:uppercase; letter-spacing:.12em; color:var(--text-dim); padding:8px 10px 6px; }
+  .tree-item{
+    display:flex; align-items:center; gap:8px;
+    font-family:'JetBrains Mono', monospace; font-size:13px;
+    padding:7px 10px; border-radius:5px; cursor:pointer; color:var(--text-dim);
+    border-left:2px solid transparent;
+  }
+  .tree-item:hover{ background:var(--panel); color:var(--text); }
+  .tree-item.active{ background:var(--panel); color:var(--text); border-left:2px solid var(--amber); }
+  .tree-item .ext{ opacity:.55; }
+  .tree-sub{ padding-left:16px; display:none; }
+  .tree-sub.open{ display:block; }
+
+  .main{ flex:1; min-width:0; }
+  .tabbar{
+    display:flex; align-items:center; gap:2px; height:42px;
+    background:var(--bg-raised); border-bottom:1px solid var(--line);
+    padding:0 10px; position:sticky; top:0; z-index:5; overflow-x:auto;
+  }
+  .tab{
+    font-family:'JetBrains Mono', monospace; font-size:12.5px; color:var(--text-dim);
+    padding:8px 14px; border-right:1px solid var(--line); white-space:nowrap;
+  }
+  .tab.current{ color:var(--text); background:var(--panel); }
+
+  .content{ padding:48px 56px; max-width:900px; }
+  @media(max-width:720px){ .content{ padding:32px 22px; } .sidebar{ width:210px; } }
+
+  section{ margin-bottom:64px; scroll-margin-top:60px; }
+  .comment{ color:#66707f; font-family:'JetBrains Mono', monospace; font-size:12.5px; margin-bottom:6px; }
+  .kw{ color:var(--violet); }
+  .fn{ color:var(--teal); }
+  .str{ color:var(--green); }
+
+  h2.sec-title{
+    font-family:'JetBrains Mono', monospace; font-size:26px; font-weight:700;
+    margin-bottom:18px; display:flex; align-items:baseline; gap:10px;
+  }
+  h2.sec-title .num{ color:var(--text-dim); font-size:16px; }
+
+  /* HERO */
+  #hero{ padding-top:12px; }
+  .hero-eyebrow{ font-family:'JetBrains Mono', monospace; color:var(--amber); font-size:13px; margin-bottom:14px; }
+  .hero-title{ font-family:'JetBrains Mono', monospace; font-size:clamp(30px,5vw,50px); font-weight:800; line-height:1.15; }
+  .hero-title .cursor{ display:inline-block; width:10px; background:var(--amber); animation:blink 1s step-end infinite; margin-left:4px; }
+  @keyframes blink{ 50%{ opacity:0; } }
+  .hero-sub{ margin-top:18px; font-size:17px; line-height:1.7; color:var(--text-dim); max-width:640px; }
+  .hero-links{ margin-top:28px; display:flex; gap:14px; flex-wrap:wrap; }
+  .btn{
+    font-family:'JetBrains Mono', monospace; font-size:13px; padding:11px 20px;
+    border-radius:6px; text-decoration:none; border:1px solid var(--line); color:var(--text);
+    transition:border-color .2s, transform .2s;
+  }
+  .btn:hover{ border-color:var(--amber); transform:translateY(-2px); }
+  .btn.primary{ background:var(--amber); color:#12141c; border-color:var(--amber); font-weight:700; }
+  .btn.primary:hover{ background:#f0b256; }
+
+  /* ABOUT */
+  .about-text{ font-size:15.5px; line-height:1.9; color:var(--text); max-width:680px; }
+  .about-text b{ color:var(--amber); font-weight:600; }
+
+  /* SKILLS as JSON */
+  .json-block{
+    background:var(--panel); border:1px solid var(--line); border-radius:8px;
+    padding:24px 28px; font-family:'JetBrains Mono', monospace; font-size:13.5px; line-height:2;
+    overflow-x:auto;
+  }
+  .jk{ color:var(--teal); } .jv{ color:var(--green); } .jp{ color:var(--text-dim); }
+  .chip-row{ display:flex; flex-wrap:wrap; gap:8px; margin-top:6px; }
+  .chip{
+    font-family:'JetBrains Mono', monospace; font-size:12px; padding:5px 11px;
+    background:var(--bg-raised); border:1px solid var(--line); border-radius:20px; color:var(--text);
+  }
+
+  /* EXPERIENCE timeline */
+  .exp-item{ border-left:2px solid var(--line); padding-left:22px; position:relative; margin-bottom:32px; }
+  .exp-item::before{
+    content:''; position:absolute; left:-7px; top:4px; width:12px; height:12px;
+    border-radius:50%; background:var(--bg); border:2px solid var(--amber);
+  }
+  .exp-role{ font-weight:700; font-size:16px; }
+  .exp-org{ color:var(--teal); font-size:13.5px; font-family:'JetBrains Mono', monospace; margin-top:2px; }
+  .exp-date{ color:var(--text-dim); font-size:12px; font-family:'JetBrains Mono', monospace; margin-top:2px; }
+  .exp-desc{ margin-top:10px; font-size:14.5px; line-height:1.7; color:var(--text-dim); }
+
+  /* PROJECTS */
+  .proj-grid{ display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+  @media(max-width:720px){ .proj-grid{ grid-template-columns:1fr; } }
+  .proj-card{
+    background:var(--panel); border:1px solid var(--line); border-radius:10px;
+    padding:22px; transition:transform .25s, border-color .25s;
+  }
+  .proj-card:hover{ transform:translateY(-4px); border-color:var(--teal); }
+  .proj-head{ display:flex; justify-content:space-between; align-items:flex-start; gap:10px; }
+  .proj-title{ font-family:'JetBrains Mono', monospace; font-weight:700; font-size:15px; }
+  .proj-tag{ font-size:10.5px; font-family:'JetBrains Mono', monospace; color:var(--bg); background:var(--amber); padding:3px 8px; border-radius:4px; white-space:nowrap; }
+  .proj-desc{ margin-top:10px; font-size:13.5px; line-height:1.65; color:var(--text-dim); }
+  .proj-stack{ margin-top:14px; display:flex; flex-wrap:wrap; gap:6px; }
+  .proj-stack span{ font-size:11px; font-family:'JetBrains Mono', monospace; color:var(--violet); }
+
+  /* CONTACT terminal */
+  .terminal{
+    background:#0e1016; border:1px solid var(--line); border-radius:10px; overflow:hidden;
+    font-family:'JetBrains Mono', monospace; font-size:13.5px; max-width:640px;
+  }
+  .term-bar{ background:var(--bg-raised); padding:9px 14px; display:flex; gap:6px; border-bottom:1px solid var(--line); }
+  .term-body{ padding:22px; line-height:2; }
+  .term-body .prompt{ color:var(--green); }
+  .term-body .path{ color:var(--teal); }
+  .term-body a{ color:var(--amber); text-decoration:none; }
+  .term-body a:hover{ text-decoration:underline; }
+
+  footer{ padding:30px 56px 50px; color:var(--text-dim); font-family:'JetBrains Mono', monospace; font-size:12px; }
+  @media(max-width:720px){ footer{ padding:24px 22px 40px; } }
+
+  .reveal{ opacity:0; transform:translateY(16px); transition:opacity .6s ease, transform .6s ease; }
+  .reveal.in{ opacity:1; transform:translateY(0); }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ animation:none !important; transition:none !important; }
+  }
+</style>
+</head>
+<body>
+
+<div id="boot">
+  <div id="boot-inner">
+    <div id="boot-log"></div>
+    <div id="boot-bar-track"><div id="boot-bar"></div></div>
+    <div id="boot-pct">0%</div>
+  </div>
+</div>
+
+<div class="ide">
+  <nav class="sidebar">
+    <div class="brand">
+      <div class="dot-row"><span class="dot red"></span><span class="dot yellow"></span><span class="dot grn"></span></div>
+      <h1>haseeb-ug</h1>
+      <p>~/portfolio — main</p>
+    </div>
+    <div class="tree">
+      <div class="tree-label">workspace</div>
+      <div class="tree-item active" data-target="hero">📄 <span>home.py</span></div>
+      <div class="tree-item" data-target="about">📄 <span>about.md</span></div>
+      <div class="tree-item" data-target="skills">🔧 <span>skills.json</span></div>
+      <div class="tree-item" data-target="experience">🕘 <span>experience.log</span></div>
+      <div class="tree-item" data-target="projects">📁 <span>projects/</span></div>
+      <div class="tree-item" data-target="contact">💻 <span>contact.sh</span></div>
+    </div>
+  </nav>
+
+  <main class="main">
+    <div class="tabbar">
+      <div class="tab current">home.py</div>
+    </div>
+
+    <div class="content">
+
+      <section id="hero">
+        <div class="hero-eyebrow">// building things that compile, learn, and teach</div>
+        <h1 class="hero-title">Haseeb Ullah<span class="cursor">&nbsp;</span></h1>
+        <p class="hero-sub">
+          Software Engineer & AI/ML developer — BS Artificial Intelligence student at FAST-NUCES, Islamabad.
+          I build full-stack apps, AI pipelines, and low-level systems software, and I teach Python & C++ to students around the world.
+        </p>
+        <div class="hero-links">
+          <a class="btn primary" href="#contact">Get in touch</a>
+          <a class="btn" href="https://github.com/Haseeb-UG" target="_blank" rel="noopener">GitHub ↗</a>
+          <a class="btn" href="#projects">View projects</a>
+        </div>
+      </section>
+
+      <section id="about" class="reveal">
+        <h2 class="sec-title"><span class="num">01</span> about.md</h2>
+        <p class="about-text">
+          I'm a third-year <b>BS Artificial Intelligence</b> student who likes going one layer deeper than the assignment asks for —
+          whether that's writing a <b>JIT compiler</b> for a Python subset, wiring a <b>CLIP + vector database</b> pipeline for image search,
+          or building a full <b>MERN</b> application end to end. Alongside coursework, I freelance on AI automation projects and
+          teach Advanced Python and C++ (OOP & DSA) to students internationally — explaining a concept clearly is, to me, as
+          important as writing the code for it.
+        </p>
+      </section>
+
+      <section id="skills" class="reveal">
+        <h2 class="sec-title"><span class="num">02</span> skills.json</h2>
+        <div class="json-block">
+<span class="jp">{</span><br>
+&nbsp;&nbsp;<span class="jk">"languages"</span><span class="jp">:</span> <span class="jv">["Python", "C++", "JavaScript", "SQL"]</span><span class="jp">,</span><br>
+&nbsp;&nbsp;<span class="jk">"ai_ml"</span><span class="jp">:</span> <span class="jv">["model training", "CLIP embeddings", "vector search", "data viz"]</span><span class="jp">,</span><br>
+&nbsp;&nbsp;<span class="jk">"web"</span><span class="jp">:</span> <span class="jv">["MongoDB", "Express.js", "React", "Node.js", "REST APIs"]</span><span class="jp">,</span><br>
+&nbsp;&nbsp;<span class="jk">"databases"</span><span class="jp">:</span> <span class="jv">["MySQL", "MongoDB Atlas", "Pinecone"]</span><span class="jp">,</span><br>
+&nbsp;&nbsp;<span class="jk">"tools"</span><span class="jp">:</span> <span class="jv">["Git", "Tkinter", "TinkerCAD", "Unity (learning)"]</span><br>
+<span class="jp">}</span>
+        </div>
+      </section>
+
+      <section id="experience" class="reveal">
+        <h2 class="sec-title"><span class="num">03</span> experience.log</h2>
+
+        <div class="exp-item">
+          <div class="exp-role">AI Systems & Workflow Automation Freelancer</div>
+          <div class="exp-org">Self-employed · Fiverr</div>
+          <div class="exp-date">2024 — Present</div>
+          <div class="exp-desc">Design and deliver AI-driven automation workflows and system integrations for international clients, including a Chrome extension (Manifest V3) with Hunter.io API integration for contact discovery.</div>
+        </div>
+
+        <div class="exp-item">
+          <div class="exp-role">Advanced Python & AI Tutor</div>
+          <div class="exp-org">Self-employed · Online & In-Person</div>
+          <div class="exp-date">2023 — Present</div>
+          <div class="exp-desc">Teach Advanced Python, OOP, data structures & algorithms, and applied AI concepts to international students online, plus in-person tutoring in Islamabad/Rawalpindi.</div>
+        </div>
+      </section>
+
+      <section id="projects" class="reveal">
+        <h2 class="sec-title"><span class="num">04</span> projects/</h2>
+        <div class="proj-grid">
+
+          <div class="proj-card">
+            <div class="proj-head"><span class="proj-title">RomaPy</span><span class="proj-tag">SYSTEMS</span></div>
+            <p class="proj-desc">An LLVM-based JIT execution engine for Python — translates a Python subset into LLVM IR for compiled-speed execution.</p>
+            <div class="proj-stack"><span>Python</span><span>LLVM</span><span>Compilers</span></div>
+          </div>
+
+          <div class="proj-card">
+            <div class="proj-head"><span class="proj-title">Cross-Modal Image Search</span><span class="proj-tag">AI/ML</span></div>
+            <p class="proj-desc">CLIP (ViT-B/32) + Pinecone + MongoDB Atlas pipeline for image similarity search, KNN classification, and text-to-image search over a 500-image dataset.</p>
+            <div class="proj-stack"><span>CLIP</span><span>Pinecone</span><span>MongoDB Atlas</span></div>
+          </div>
+
+          <div class="proj-card">
+            <div class="proj-head"><span class="proj-title">RFID Attendance Tracker</span><span class="proj-tag">SYSTEMS</span></div>
+            <p class="proj-desc">Automated attendance and data-entry tracking system using RFID hardware, MySQL, and live Google Sheets sync.</p>
+            <div class="proj-stack"><span>MySQL</span><span>RFID</span><span>Google Sheets API</span></div>
+          </div>
+
+          <div class="proj-card">
+            <div class="proj-head"><span class="proj-title">Rush-Hour-Cpp</span><span class="proj-tag">GRAPHICS</span></div>
+            <p class="proj-desc">A 2D puzzle game built in C++ with OpenGL/GLUT, applying OOP design and custom collision logic.</p>
+            <div class="proj-stack"><span>C++</span><span>OpenGL</span><span>GLUT</span></div>
+          </div>
+
+          <div class="proj-card">
+            <div class="proj-head"><span class="proj-title">SQL Database Simulator</span><span class="proj-tag">EDU</span></div>
+            <p class="proj-desc">An interactive React + Tailwind teaching tool that visualizes SQL queries with classroom analogies for students learning databases.</p>
+            <div class="proj-stack"><span>React</span><span>Tailwind CSS</span></div>
+          </div>
+
+          <div class="proj-card">
+            <div class="proj-head"><span class="proj-title">Upwork Contact Finder</span><span class="proj-tag">TOOLING</span></div>
+            <p class="proj-desc">A Manifest V3 Chrome extension that surfaces publicly visible hiring-manager info from job listings via the Hunter.io API, with fallback providers.</p>
+            <div class="proj-stack"><span>JavaScript</span><span>Chrome APIs</span><span>Hunter.io</span></div>
+          </div>
+
+        </div>
+      </section>
+
+      <section id="contact" class="reveal">
+        <h2 class="sec-title"><span class="num">05</span> contact.sh</h2>
+        <div class="terminal">
+          <div class="term-bar"><span class="dot red"></span><span class="dot yellow"></span><span class="dot grn"></span></div>
+          <div class="term-body">
+            <div><span class="prompt">haseeb@portfolio</span><span class="path">:~$</span> whoami</div>
+            <div>Haseeb Ullah — Software & AI Engineer, Islamabad, Pakistan</div>
+            <div style="margin-top:10px;"><span class="prompt">haseeb@portfolio</span><span class="path">:~$</span> cat contact.txt</div>
+            <div>email: <a href="mailto:your.email@example.com">[your.email@example.com]</a></div>
+            <div>github: <a href="https://github.com/Haseeb-UG" target="_blank" rel="noopener">github.com/Haseeb-UG</a></div>
+            <div>linkedin: <a href="#">[linkedin.com/in/your-handle]</a></div>
+            <div style="margin-top:10px;"><span class="prompt">haseeb@portfolio</span><span class="path">:~$</span> <span class="cursor" style="background:var(--green); width:8px; display:inline-block;">&nbsp;</span></div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+    <footer>© <span id="year"></span> Haseeb Ullah — built with HTML, CSS & a little JIT-compiler humor.</footer>
+  </main>
+</div>
+
+<script>
+  document.getElementById('year').textContent = new Date().getFullYear();
+
+  // Boot sequence
+  const lines = [
+    ["$ ./build.sh --target=portfolio", null],
+    ["→ resolving dependencies...", null],
+    ["→ compiling about.md", "ok"],
+    ["→ compiling skills.json", "ok"],
+    ["→ compiling experience.log", "ok"],
+    ["→ linking projects/", "ok"],
+    ["→ build successful ✓", "ok"],
+  ];
+  const logEl = document.getElementById('boot-log');
+  const barEl = document.getElementById('boot-bar');
+  const pctEl = document.getElementById('boot-pct');
+  let i = 0;
+  function typeLine(){
+    if(i < lines.length){
+      const [text, cls] = lines[i];
+      const div = document.createElement('div');
+      if(cls) div.className = cls;
+      div.textContent = text;
+      logEl.appendChild(div);
+      i++;
+      const pct = Math.round((i/lines.length)*100);
+      barEl.style.width = pct + '%';
+      pctEl.textContent = pct + '%';
+      setTimeout(typeLine, 260);
+    } else {
+      setTimeout(() => document.getElementById('boot').classList.add('hidden'), 400);
+    }
+  }
+  setTimeout(typeLine, 200);
+
+  // Skip boot on repeat visits within session, but keep it snappy regardless (no localStorage per policy)
+
+  // Sidebar nav + tab label sync
+  const items = document.querySelectorAll('.tree-item');
+  const tabLabel = document.querySelector('.tab.current');
+  const fileNames = {
+    hero: 'home.py', about: 'about.md', skills: 'skills.json',
+    experience: 'experience.log', projects: 'projects/', contact: 'contact.sh'
+  };
+  items.forEach(item => {
+    item.addEventListener('click', () => {
+      const target = item.getAttribute('data-target');
+      document.getElementById(target).scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
+
+  const sections = document.querySelectorAll('section');
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if(e.isIntersecting){
+        e.target.classList.add('in');
+        const id = e.target.id;
+        items.forEach(it => it.classList.toggle('active', it.getAttribute('data-target') === id));
+        if(fileNames[id]) tabLabel.textContent = fileNames[id];
+      }
+    });
+  }, { threshold: 0.35 });
+  sections.forEach(s => io.observe(s));
+</script>
+
+</body>
+</html>
